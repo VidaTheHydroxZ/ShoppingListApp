@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="stores">
+        <item>Konzum</item>
+        <item>Kaufland</item>
+        <item>Lidl</item>
+        <item>Spar</item>
+        <item>Interspar</item>
+        <item>Studenac</item>
+        <item>Tommy</item>
+    </string-array>
+
+    <string-array name="days">
+        <item>Ponedjeljak</item>
+        <item>Utorak</item>
+        <item>Srijeda</item>
+        <item>Cetvrtak</item>
+        <item>Petak</item>
+    </string-array>
+</resources>
