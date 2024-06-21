@@ -1,14 +1,11 @@
 package com.example.shoppinglistapp;
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Paint;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -17,24 +14,22 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity
 {
-    List<String> shoppingList;
-    ArrayAdapter<String> arrayAdapter;
-    ArrayAdapter<CharSequence> storeAdapter;
-    ArrayAdapter<CharSequence> daysAdapter;
-    ListView listView;
-    EditText editText;
-    Spinner storeSpinner;
-    Spinner daysSpinner;
-    SharedPreferences sharedPreferences;
-    SharedPreferences.Editor sharedPreferencesEditor;
+    private shoppingListHelper shoppingListHelper;
+    private ArrayList<String> shoppingList;
+    private ArrayAdapter<String> arrayAdapter;
+    private ArrayAdapter<CharSequence> storeAdapter;
+    private ArrayAdapter<CharSequence> daysAdapter;
+    private ListView listView;
+    private EditText shoppingItem;
+    private Spinner storeSpinner;
+    private Spinner daysSpinner;
+    private String  selectedStore, selectedDay;
+    private Button addButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -42,43 +37,33 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        shoppingListHelper = new shoppingListHelper();
+
         storeSpinner = findViewById(R.id.spinnerStores);
         storeAdapter = ArrayAdapter.createFromResource(this, R.array.stores, R.layout.store_list_view_layout);
         storeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         storeSpinner.setAdapter(storeAdapter);
-        storeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+        addButton = findViewById(R.id.addItem);
+
+        AdapterView.OnItemSelectedListener onItemSelectedListener = new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                String store = adapterView.getItemAtPosition(position).toString();
-                Toast.makeText(MainActivity.this, "Selected store is: " + store, Toast.LENGTH_SHORT).show();
-                shoppingList.clear();
-                arrayAdapter.notifyDataSetChanged();
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateListView();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
-        });
+        };
 
         daysSpinner = findViewById(R.id.spinnerDays);
         daysAdapter = ArrayAdapter.createFromResource(this, R.array.days, R.layout.store_list_view_layout);
         daysAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         daysSpinner.setAdapter(daysAdapter);
-        daysSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                String day = adapterView.getItemAtPosition(position).toString();
-                Toast.makeText(MainActivity.this, "Selected day is: " + day, Toast.LENGTH_SHORT).show();
-                shoppingList.clear();
-                arrayAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
+        storeSpinner.setOnItemSelectedListener(onItemSelectedListener);
+        daysSpinner.setOnItemSelectedListener(onItemSelectedListener);
 
         shoppingList = new ArrayList<>();
         arrayAdapter = new ArrayAdapter<>(this, R.layout.list_view_layout, shoppingList);
@@ -93,24 +78,28 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        editText = findViewById(R.id.shoppingItem);
+        shoppingItem = findViewById(R.id.shoppingItem);
         setTitle("Shopping List");
+
+        addButton.setOnClickListener(v -> {
+            String grocery = shoppingItem.getText().toString();
+            if (!grocery.isEmpty())
+            {
+                shoppingListHelper.addGrocery(selectedStore, selectedDay, grocery);
+                Toast.makeText(this, "Added " + grocery + "to the list!", Toast.LENGTH_SHORT).show();
+                shoppingItem.setText("");
+                updateListView();
+            }
+        });
     }
 
-    public void addItemToList(View view)
-    {
-        String input = editText.getText().toString();
 
-        shoppingList.add(input);
+    public void updateListView()
+    {
+        selectedStore = storeSpinner.getSelectedItem().toString();
+        selectedDay = daysSpinner.getSelectedItem().toString();
+        shoppingList.clear();
+        shoppingList.addAll(shoppingListHelper.getGroceries(selectedStore, selectedDay));
         arrayAdapter.notifyDataSetChanged();
-        Toast.makeText(this, "You added " + input +
-                " to the list!", Toast.LENGTH_SHORT).show();
-
-        editText.setText("");
-    }
-
-    public void saveView(View view)
-    {
-
     }
 }
