@@ -1,5 +1,6 @@
 package com.example.shoppinglistapp;
 
+import android.os.AsyncTask;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.View;
@@ -14,12 +15,13 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.List;
 import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity
 {
-    private shoppingListHelper shoppingListHelper;
+    private GroceryDatabase db;
     private ArrayList<String> shoppingList;
     private ArrayAdapter<String> arrayAdapter;
     private ArrayAdapter<CharSequence> storeAdapter;
@@ -37,7 +39,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        shoppingListHelper = new shoppingListHelper();
+        db = GroceryDatabase.getDatabase(getApplicationContext());
 
         storeSpinner = findViewById(R.id.spinnerStores);
         storeAdapter = ArrayAdapter.createFromResource(this, R.array.stores, R.layout.store_list_view_layout);
@@ -85,7 +87,8 @@ public class MainActivity extends AppCompatActivity
             String grocery = shoppingItem.getText().toString();
             if (!grocery.isEmpty())
             {
-                shoppingListHelper.addGrocery(selectedStore, selectedDay, grocery);
+                GroceryItem groceryItem = new GroceryItem(selectedStore, selectedDay, grocery);
+                new InsertGroceryAsyncTask(db.groceryDao()).execute(groceryItem);
                 Toast.makeText(this, "Added " + grocery + "to the list!", Toast.LENGTH_SHORT).show();
                 shoppingItem.setText("");
                 updateListView();
@@ -93,13 +96,56 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    private static class InsertGroceryAsyncTask extends AsyncTask<GroceryItem, Void, Void>  {
+        private GroceryDao groceryDao;
+
+        InsertGroceryAsyncTask(GroceryDao groceryDao)
+        {
+            this.groceryDao = groceryDao;
+        }
+
+        @Override
+        protected Void doInBackground(GroceryItem... groceryItems)
+        {
+            groceryDao.insert(groceryItems[0]);
+            return null;
+        }
+    }
+
+    private static class LoadGroceriesAsyncTask extends AsyncTask<String, Void, List<GroceryItem>> {
+        private GroceryDao groceryDao;
+        private MainActivity activity;
+
+        LoadGroceriesAsyncTask(GroceryDao groceryDao, MainActivity activity)
+        {
+            this.groceryDao = groceryDao;
+            this.activity = activity;
+        }
+
+        @Override
+        protected List<GroceryItem> doInBackground(String... params)
+        {
+            return groceryDao.getGroceriesForStoreAndDay(params[0], params[1]);
+        }
+
+        @Override
+        protected void onPostExecute(List<GroceryItem> groceryItems)
+        {
+            super.onPostExecute(groceryItems);
+            activity.shoppingList.clear();
+            for (GroceryItem item : groceryItems)
+            {
+                activity.shoppingList.add(item.getItem());
+            }
+            activity.arrayAdapter.notifyDataSetChanged();
+        }
+    }
+
 
     public void updateListView()
     {
         selectedStore = storeSpinner.getSelectedItem().toString();
         selectedDay = daysSpinner.getSelectedItem().toString();
-        shoppingList.clear();
-        shoppingList.addAll(shoppingListHelper.getGroceries(selectedStore, selectedDay));
-        arrayAdapter.notifyDataSetChanged();
+        new LoadGroceriesAsyncTask(db.groceryDao(), this).execute(selectedStore, selectedDay);
     }
 }
