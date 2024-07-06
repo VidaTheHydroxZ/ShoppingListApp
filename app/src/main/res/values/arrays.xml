@@ -4,10 +4,11 @@
         <item>Konzum</item>
         <item>Kaufland</item>
         <item>Lidl</item>
-        <item>Spar</item>
+        <item>Plodine</item>
         <item>Interspar</item>
         <item>Studenac</item>
         <item>Tommy</item>
+        <item>Zabac</item>
     </string-array>
 
     <string-array name="days">
@@ -16,5 +17,7 @@
         <item>Srijeda</item>
         <item>Cetvrtak</item>
         <item>Petak</item>
+        <item>Subota</item>
+        <item>Nedjelja</item>
     </string-array>
 </resources>

@@ -18,8 +18,8 @@ public interface GroceryDao {
     @Query("DELETE FROM grocery_table WHERE store = :store AND day = :day AND item = :item")
     void delete(String store, String day, String item);
 
-    @Query("DELETE FROM grocery_table")
-    void deleteAll();
+    @Query("DELETE FROM grocery_table WHERE store =:store")
+    void deleteAllGroceriesForStore(String store);
 
     @Update
     void update(GroceryItem groceryItem);

@@ -25,6 +25,7 @@
         android:background="@android:drawable/btn_dropdown"
         android:elevation="4dp"
         android:padding="10dp"
+        android:translationX="-60dp"
         android:visibility="visible" />
 
     <LinearLayout
@@ -68,5 +69,16 @@
             android:background="#eee"></ListView>
 
     </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/moreOptionsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="More Options"
+        android:src="@drawable/baseline_more_vert_36" />
 
 </RelativeLayout>

@@ -12,7 +12,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity
     private Spinner daysSpinner;
     private String  selectedStore, selectedDay;
     private Button addButton;
+    private ImageButton moreOptions;
     private static MainActivity instance;
     private boolean paintFlagsOn;
 
@@ -56,6 +59,7 @@ public class MainActivity extends AppCompatActivity
         storeSpinner.setAdapter(storeAdapter);
 
         addButton = findViewById(R.id.addItem);
+        moreOptions = findViewById(R.id.moreOptionsButton);
 
         AdapterView.OnItemSelectedListener onItemSelectedListener = new AdapterView.OnItemSelectedListener() {
             @Override
@@ -65,7 +69,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-
+                // do nothing
             }
         };
 
@@ -86,15 +90,14 @@ public class MainActivity extends AppCompatActivity
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView textView = (TextView) view;
                 if(!paintFlagsOn)
                 {
-                    TextView textView = (TextView) view;
                     textView.setPaintFlags(textView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
                     paintFlagsOn = true;
                 }
                 else
                 {
-                    TextView textView = (TextView) view;
                     textView.setPaintFlags(textView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
                     paintFlagsOn = false;
                 }
@@ -115,8 +118,42 @@ public class MainActivity extends AppCompatActivity
                 updateListView();
             }
         });
-    }
 
+        moreOptions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick (View v)
+            {
+                showPopupMenu(v);
+            }
+        });
+
+
+    }
+    public void showPopupMenu(View view)
+    {
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        MenuInflater inflater = popupMenu.getMenuInflater();
+        inflater.inflate(R.menu.popupmenu, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener()
+        {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                return handleMenuItemClick(item);
+            }
+        });
+        popupMenu.show();
+    }
+     private boolean handleMenuItemClick(MenuItem item)
+     {
+         if (item.getItemId() == R.id.deleteAll)
+         {
+             String selectedStore = storeSpinner.getSelectedItem().toString();
+             new DeleteAllGroceriesAsyncTask(db.groceryDao()).execute(selectedStore);
+             Toast.makeText(this, "Deleted all items for the selected store!", Toast.LENGTH_SHORT).show();
+             return true;
+         }
+         return false;
+     }
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
     {
@@ -274,6 +311,26 @@ public class MainActivity extends AppCompatActivity
             String grocery = params[2];
             groceryDao.delete(store, day, grocery);
             return null;
+        }
+    }
+
+    private static class DeleteAllGroceriesAsyncTask extends AsyncTask<String, Void, Void> {
+        private GroceryDao groceryDao;
+
+        DeleteAllGroceriesAsyncTask(GroceryDao groceryDao) {
+            this.groceryDao = groceryDao;
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+            String store = params[0];
+            groceryDao.deleteAllGroceriesForStore(store);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            instance.updateListView();
         }
     }
 
